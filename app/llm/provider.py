@@ -34,15 +34,20 @@ def _build_prompt(repos: List[RepoInfo]) -> str:
             "language": r.language or "",
             "homepage": r.homepage or "",
             "topics": r.topics,
-            "readme_excerpt": (r.readme_excerpt or "")[:4000],
+            "readme_excerpt": r.readme_excerpt or "",
         }
         for r in repos
     ]
     instruction = (
-        "你是一位繁體中文技術編輯。請閱讀每個 GitHub 專案的描述與 README 摘要，"
-        "為每個專案撰寫 150~220 字的介紹（繁體中文），包含：用途、核心特色、技術亮點與適用情境。"
-        "避免冗長與誇大詞彙，不要重複原文。"
-        "輸出 JSON，格式為 {\"summaries\":[{\"full_name\":string,\"intro_md\":string}...] }，intro_md 以 Markdown 撰寫。"
+        "你是一位繁體中文技術編輯。請閱讀每個 GitHub 專案的描述與 README 內容，"
+        "為每個專案撰寫一段精簡的介紹（繁體中文）。\n"
+        "要求：\n"
+        "1. 字數嚴格控制在 150~250 字之間。\n"
+        "2. 內容包含：專案用途、核心功能、技術亮點。\n"
+        "3. 必須綜合 README 的內容進行總結，禁止直接翻譯或照抄長篇 README。\n"
+        "4. 使用 Markdown 格式。\n"
+        "5. JSON 中的 full_name 必須與輸入完全一致（包含 owner/repo）。\n"
+        "輸出 JSON，格式為 {\"summaries\":[{\"full_name\":string,\"intro_md\":string}...] }。"
     )
     return instruction + "\n\nINPUT:\n" + json.dumps(repos_payload, ensure_ascii=False)
 
@@ -88,13 +93,30 @@ class OllamaClient(LLMProvider):
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
+                max_tokens=4000,
             )
             text = resp.choices[0].message.content or "{}"
-            data = json.loads(text)
+            
+            # 嘗試清理 Markdown 標記
+            clean_text = text.strip()
+            if "```json" in clean_text:
+                clean_text = clean_text.split("```json")[1].split("```")[0]
+            elif "```" in clean_text:
+                clean_text = clean_text.split("```")[1].split("```")[0]
+            
+            data = json.loads(clean_text.strip())
+            # print(f"[DEBUG] Parsed data: {json.dumps(data, ensure_ascii=False)[:500]}...")
+
             if isinstance(data, dict) and isinstance(data.get("summaries"), list):
                 return data["summaries"]
-        except Exception:
-            pass
+            elif isinstance(data, list):
+                # Fallback: 如果模型直接回傳 List
+                return data
+            else:
+                print(f"[WARN] Ollama response format invalid. Raw: {text[:200]}...")
+        except Exception as e:
+            print(f"[WARN] Ollama generation failed: {e}")
+            print(f"[DEBUG] Raw response was: {text if 'text' in locals() else 'N/A'}")
         return [{"full_name": r.full_name, "intro_md": r.description or ""} for r in repos]
 
 

@@ -32,7 +32,7 @@ class AppConfig:
             anthropic_api_key=_get_env("ANTHROPIC_API_KEY"),
             claude_model=_get_env("CLAUDE_MODEL", "claude-3-5-sonnet-20240620"),
             ollama_base_url=_get_env("OLLAMA_BASE_URL", "http://host.docker.internal:11434/v1"),
-            ollama_model=_get_env("OLLAMA_MODEL", "llama3.1:8b-instruct"),
+            ollama_model=_get_env("OLLAMA_MODEL", "phi4-mini:3.8b"),
             github_token=_get_env("GITHUB_TOKEN"),
             target_repo=_get_env("TARGET_REPO", _get_env("GITHUB_REPOSITORY", "")) or "",
             target_branch=_get_env("TARGET_BRANCH", "main"),

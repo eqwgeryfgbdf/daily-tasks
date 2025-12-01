@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Trending Picks - {{ date_str }}</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .date {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .repo-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease;
+        }
+
+        .repo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .repo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .repo-title a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .repo-title a:hover {
+            color: var(--primary-color);
+        }
+
+        .stars {
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .language {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .language::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            margin-right: 6px;
+        }
+
+        .topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-badge {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+        }
+
+        .description {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .summary {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        
+        /* Markdown generated content styles */
+        .summary h3 { margin-top: 0; font-size: 1.1rem; }
+        .summary ul { padding-left: 1.2rem; }
+        .summary p { margin-bottom: 0.5rem; }
+
+        .links {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            background-color: white;
+        }
+
+        .btn-outline:hover {
+            background-color: #f1f5f9;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--text-muted);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Daily Trending Picks</h1>
+            <div class="date">{{ date_str }} ({{ timezone }})</div>
+            <p>Today's fastest-growing projects on GitHub, powered by AI.</p>
+        </header>
+
+        <main>
+            {% for r in repos %}
+            <article class="repo-card">
+                <div class="repo-header">
+                    <h2 class="repo-title">
+                        <a href="{{ r.html_url }}" target="_blank">{{ r.name }}</a>
+                    </h2>
+                    <span class="stars">⭐ {{ r.stars }}</span>
+                </div>
+
+                <div class="meta">
+                    {% if r.language %}
+                    <span class="language">{{ r.language }}</span>
+                    {% endif %}
+                </div>
+
+                {% if r.topics %}
+                <div class="topics">
+                    {% for topic in r.topics[:5] %}
+                    <span class="topic-badge">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="description">
+                    {{ r.description }}
+                </div>
+
+                <div class="summary">
+                    {{ r.intro_html | safe }}
+                </div>
+
+                <div class="links">
+                    <a href="{{ r.html_url }}" target="_blank" class="btn btn-primary">View on GitHub</a>
+                    {% if r.homepage %}
+                    <a href="{{ r.homepage }}" target="_blank" class="btn btn-outline">Homepage</a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </main>
+
+        <footer>
+            <p>Generated automatically by <a href="https://github.com/{{ github_repo }}">Daily Tasks</a></p>
+            <p><a href="https://github.com/{{ github_repo }}/tree/main/daily">View Archives</a></p>
+        </footer>
+    </div>
+</body>
+</html>

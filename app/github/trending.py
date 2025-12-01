@@ -74,7 +74,11 @@ def fetch_repo_details(token: str | None, full_name: str) -> dict:
         )
         if r2.status_code == 200:
             readme_text = r2.text
-    except Exception:
+            print(f"[INFO] Successfully fetched README for {full_name} ({len(readme_text)} chars)")
+        else:
+            print(f"[WARN] Failed to fetch README for {full_name}: status {r2.status_code}")
+    except Exception as e:
+        print(f"[WARN] Exception fetching README for {full_name}: {e}")
         readme_text = None
 
     return {
@@ -86,7 +90,7 @@ def fetch_repo_details(token: str | None, full_name: str) -> dict:
         "language": repo.get("language"),
         "homepage": repo.get("homepage"),
         "topics": repo.get("topics", []),
-        "readme_excerpt": (readme_text or "")[:4000],
+        "readme_excerpt": (readme_text or "")[:12000],
     }
 
 
